@@ -1,40 +1,37 @@
-var express = require("express");
-var app = express();
-var bodyParser = require("body-parser");
+const express = require("express");
+const app = express();
+const bodyParser = require("body-parser");
+const low = require("lowdb");
+const FileAsync = require("lowdb/adapters/FileAsync");
 
-var low = require("lowdb");
-var FileSync = require("lowdb/adapters/FileSync");
 
-var adapter = new FileSync("test.json");
-var db = low(adapter);
-db.defaults({notes: []})
-  .write();
-
+const adapter = new FileAsync("test.json");
 app.use(bodyParser.json()); 
 
 low(adapter)
   .then(db => {
+    db.defaults({notes: []})
+      .write();
+
     app.get("/getNote", (req, res) => {
-      db.get("getNote")
-        .write()
-      res.end()
-      })
+      const note = db.get("notes")
+        .value();
+        res.send(note);
+    });
     
     app.post("/updateNote/:value", (req, res) => {
-      value = req.params.value
+      value = req.params.value;
       db.get("notes")
         .push(value)
-        .write()
-      res.end()
-    })
+        .write();
+      res.end();
+    });
 
     app.use((req, res, next) => {
-      res.status(404).send("Sorry, I couldn't find it")
-    })
+      res.status(404).send("Sorry, I couldn't find it");
+    });
     
   })
-
-
   .then(() => {
-    app.listen(3000, () => console.log("Listening on port 3000"))
-  })
+    app.listen(3000, () => console.log("Listening on port 3000"));
+  });
